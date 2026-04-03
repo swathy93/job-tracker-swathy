@@ -528,7 +528,9 @@ function renderTable() {
   document.getElementById('new-count').textContent = jobs.filter(j=>j.status==='new').length;
   document.getElementById('applied-count').textContent = jobs.filter(j=>j.status==='applied').length;
 }
-
+fetch(API_URL + "?action=getAll&t=" + new Date().getTime());
+  jobs.filter(j => j.status === "applied").length;
+  jobs.filter(j => (j.status || "").toLowerCase().trim() === "applied");
 // ─── JOB DETAILS PANEL ───────────────────────────────────────────────────────
 function viewDetails(id) {
   const j = jobs.find(x=>x.id===id);
