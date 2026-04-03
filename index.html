@@ -359,7 +359,15 @@ function setSheetStatus(state, label) {
   el.className = 'sheet-status ' + state;
   el.textContent = label;
 }
+ const API_URL = "https://script.google.com/macros/s/AKfycbzvmoDtiSrvRSV8XqieeGPKDdFgIh9mlp0-OownLKoODTJ4JhGiglmr5WPzWU2ONkMVzA/exec";
 
+    fetch(API_URL + "?action=getAll")
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("jobs").innerHTML =
+          JSON.stringify(data, null, 2);
+      })
+      .catch(err => console.error("Error:", err));
 async function syncFromSheet() {
   if (!sheetUrl) return;
   setSheetStatus('syncing', 'Syncing…');
