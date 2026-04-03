@@ -631,7 +631,10 @@ Swathy K S
 swathysanath@gmail.com | +971 56 822 6804
 LinkedIn: Swathy K S`;
 }
-
+jobs.sort((a, b) => {
+  return new Date(b.postedAt || b.date || b.created_at) -
+         new Date(a.postedAt || a.date || a.created_at);
+});
 function viewJob(id) {
   const j = jobs.find(x=>x.id===id);
   activeJobId = id;
