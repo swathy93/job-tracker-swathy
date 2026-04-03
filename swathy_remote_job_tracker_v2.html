@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swathy — Remote Job Tracker</title>
+<style>
+  :root {
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f5f5f2;
+    --color-background-tertiary: #efefeb;
+    --color-background-info: #e6f1fb;
+    --color-background-success: #eaf3de;
+    --color-background-warning: #faeeda;
+    --color-background-danger: #fcebeb;
+    --color-text-primary: #1a1a18;
+    --color-text-secondary: #5f5e5a;
+    --color-text-tertiary: #888780;
+    --color-text-info: #0c447c;
+    --color-text-success: #3b6d11;
+    --color-text-warning: #854f0b;
+    --color-text-danger: #a32d2d;
+    --color-border-tertiary: rgba(0,0,0,0.12);
+    --color-border-secondary: rgba(0,0,0,0.25);
+    --color-border-info: #85b7eb;
+    --font-sans: system-ui, -apple-system, sans-serif;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-background-primary: #1c1c1a;
+      --color-background-secondary: #2a2a27;
+      --color-background-tertiary: #222220;
+      --color-background-info: #042c53;
+      --color-background-success: #173404;
+      --color-background-warning: #412402;
+      --color-background-danger: #501313;
+      --color-text-primary: #f0ede8;
+      --color-text-secondary: #b4b2a9;
+      --color-text-tertiary: #888780;
+      --color-text-info: #b5d4f4;
+      --color-text-success: #c0dd97;
+      --color-text-warning: #fac775;
+      --color-text-danger: #f7c1c1;
+      --color-border-tertiary: rgba(255,255,255,0.12);
+      --color-border-secondary: rgba(255,255,255,0.25);
+      --color-border-info: #185fa5;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); background: var(--color-background-tertiary); color: var(--color-text-primary); padding: 20px; }
+  .container { max-width: 1100px; margin: 0 auto; background: var(--color-background-primary); border-radius: var(--border-radius-lg); padding: 20px 24px; border: 0.5px solid var(--color-border-tertiary); }
+  label { font-size: 13px; color: var(--color-text-secondary); display: block; margin-bottom: 4px; }
+  input, textarea, select { font-family: var(--font-sans); background: var(--color-background-secondary); color: var(--color-text-primary); border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 6px 10px; font-size: 13px; }
+  input:focus, textarea:focus { outline: none; box-shadow: 0 0 0 2px var(--color-border-info); }
+  button { font-family: var(--font-sans); cursor: pointer; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; border-bottom: 0.5px solid var(--color-border-tertiary); margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+  .topbar-title { font-size: 16px; font-weight: 500; color: var(--color-text-primary); }
+  .stats { display: flex; gap: 10px; flex-wrap: wrap; }
+  .stat { background: var(--color-background-secondary); border-radius: 8px; padding: 8px 14px; font-size: 12px; color: var(--color-text-secondary); }
+  .stat span { font-weight: 500; color: var(--color-text-primary); margin-left: 4px; }
+  .next-scan { font-size: 12px; padding: 6px 12px; border-radius: 8px; background: var(--color-background-info); color: var(--color-text-info); }
+  .scan-row { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .scan-card { flex: 1; min-width: 120px; background: var(--color-background-secondary); border-radius: 8px; padding: 10px 14px; text-align: center; }
+  .scan-time { font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
+  .scan-label { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+  .scan-next { font-size: 11px; color: var(--color-text-success); margin-top: 3px; }
+  .filter-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+  .filter-btn { font-size: 12px; padding: 5px 12px; border-radius: 6px; cursor: pointer; border: 0.5px solid var(--color-border-secondary); background: transparent; color: var(--color-text-secondary); }
+  .filter-btn.active { background: var(--color-background-info); color: var(--color-text-info); border-color: transparent; font-weight: 500; }
+  .search-box { flex: 1; min-width: 150px; }
+  .search-box input { width: 100%; height: 32px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+  th { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); text-align: left; padding: 8px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); }
+  td { padding: 10px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); vertical-align: top; }
+  tr:hover td { background: var(--color-background-secondary); }
+  .badge { display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 4px; font-weight: 500; }
+  .badge-tw { background: #eeedfe; color: #3c3489; }
+  .badge-cs { background: #e1f5ee; color: #085041; }
+  .badge-impl { background: #faece7; color: #712b13; }
+  .badge-cont { background: #fbeaf0; color: #72243e; }
+  .source-li { background: #e6f1fb; color: #0c447c; }
+  .source-ind { background: #eaf3de; color: #27500a; }
+  .source-rem { background: #faeeda; color: #633806; }
+  .source-wwr { background: #faece7; color: #712b13; }
+  .source-rmtv { background: #fbeaf0; color: #72243e; }
+  .status-new { background: #eaf3de; color: #3b6d11; }
+  .status-applied { background: #e6f1fb; color: #0c447c; }
+  .status-skip { background: #f1efe8; color: #444441; }
+  .btn-sm { font-size: 11px; padding: 4px 10px; border-radius: 5px; cursor: pointer; border: 0.5px solid var(--color-border-secondary); background: transparent; color: var(--color-text-primary); white-space: nowrap; }
+  .btn-apply { border-color: #1d9e75; color: #085041; background: #e1f5ee; }
+  .btn-view { color: var(--color-text-info); border-color: var(--color-border-info); }
+  .btn-details { color: var(--color-text-warning); border-color: #e8c87a; background: var(--color-background-warning); }
+  .col-title { width: 20%; } .col-co { width: 14%; } .col-type { width: 10%; } .col-src { width: 9%; } .col-match { width: 8%; } .col-status { width: 9%; } .col-act { width: 30%; }
+  .match-bar { height: 6px; border-radius: 3px; background: var(--color-background-secondary); margin-top: 4px; }
+  .match-fill { height: 6px; border-radius: 3px; }
+  .panel { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: 12px; padding: 16px 18px; margin-top: 14px; }
+  .panel-title { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+  .panel-sub { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 14px; }
+  .panel-section { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: .06em; margin: 14px 0 6px; padding-bottom: 4px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .panel-body { font-size: 13px; line-height: 1.7; }
+  .panel-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .btn-lg { font-size: 13px; padding: 8px 18px; border-radius: 8px; cursor: pointer; border: 0.5px solid var(--color-border-secondary); background: transparent; color: var(--color-text-primary); }
+  .btn-lg-green { background: #e1f5ee; color: #085041; border-color: #5dcaa5; }
+  .btn-lg-blue { background: #e6f1fb; color: #0c447c; border-color: #85b7eb; }
+  .empty-panel { text-align: center; padding: 30px; color: var(--color-text-secondary); font-size: 13px; }
+  textarea { width: 100%; line-height: 1.7; resize: vertical; }
+  .copied { font-size: 12px; color: var(--color-text-success); margin-left: 8px; display: none; }
+
+  /* Detail card */
+  .detail-card { background: var(--color-background-secondary); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+  .detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 10px; }
+  .detail-item label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--color-text-tertiary); margin-bottom: 2px; }
+  .detail-item .detail-val { font-size: 13px; color: var(--color-text-primary); font-weight: 500; }
+  .closure-highlight { background: var(--color-background-warning); border: 0.5px solid #e8c87a; border-radius: 6px; padding: 8px 12px; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-text-warning); font-weight: 500; margin-bottom: 10px; }
+  .closure-expired { background: var(--color-background-danger); border-color: #f09090; color: var(--color-text-danger); }
+  .closure-soon { background: var(--color-background-warning); }
+  .closure-ok { background: var(--color-background-success); border-color: #aad68a; color: var(--color-text-success); }
+
+  /* Google Sheet config banner */
+  .sheet-config { background: var(--color-background-info); border: 0.5px solid var(--color-border-info); border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; font-size: 12px; color: var(--color-text-info); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .sheet-config input { background: var(--color-background-primary); border-color: var(--color-border-info); font-size: 12px; padding: 5px 9px; flex: 1; min-width: 250px; }
+  .sheet-status { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 500; }
+  .sheet-status.connected { background: #eaf3de; color: #3b6d11; }
+  .sheet-status.disconnected { background: #fcebeb; color: #a32d2d; }
+  .sheet-status.syncing { background: #faeeda; color: #854f0b; }
+
+  /* Toast */
+  #toast { position: fixed; bottom: 24px; right: 24px; background: #1a1a18; color: #f0ede8; font-size: 13px; padding: 10px 16px; border-radius: 8px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 999; }
+  #toast.show { opacity: 1; }
+
+  /* Setup guide modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .modal-box { background: var(--color-background-primary); border-radius: 14px; padding: 22px 26px; max-width: 620px; width: 100%; max-height: 80vh; overflow-y: auto; border: 0.5px solid var(--color-border-tertiary); }
+  .modal-box h2 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .modal-box p, .modal-box li { font-size: 13px; line-height: 1.7; color: var(--color-text-secondary); }
+  .modal-box ol { padding-left: 18px; margin: 10px 0; }
+  .modal-box code { background: var(--color-background-secondary); padding: 2px 6px; border-radius: 4px; font-size: 12px; color: var(--color-text-primary); font-family: monospace; }
+  .modal-box pre { background: var(--color-background-secondary); border-radius: 8px; padding: 12px; font-size: 11px; line-height: 1.6; overflow-x: auto; margin: 10px 0; font-family: monospace; color: var(--color-text-primary); white-space: pre-wrap; }
+  .modal-close { float: right; background: none; border: none; font-size: 18px; cursor: pointer; color: var(--color-text-secondary); }
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<!-- Setup Guide Modal -->
+<div id="setup-modal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('setup-modal').style.display='none'">✕</button>
+    <h2>🔧 Google Sheets Setup Guide</h2>
+    <p style="margin-top:6px;">Follow these steps once to connect your tracker to Google Sheets so applied jobs persist after refresh.</p>
+    <ol>
+      <li><strong>Create a new Google Sheet.</strong> Name the first sheet <code>Jobs</code>.</li>
+      <li><strong>Add these column headers in Row 1:</strong><br>
+        <code>id | title | company | type | source | match | location | salary | posted | closureDate | status | applyUrl | desc | skills | notes | appliedAt</code>
+      </li>
+      <li><strong>Open Apps Script:</strong> In the Sheet, go to <em>Extensions → Apps Script</em>.</li>
+      <li><strong>Replace all code</strong> with the script below and click <em>Save</em>.</li>
+      <li><strong>Deploy as Web App:</strong> Click <em>Deploy → New deployment → Web app</em>. Set <em>Execute as: Me</em> and <em>Who has access: Anyone</em>. Copy the URL.</li>
+      <li><strong>Paste the URL</strong> in the "Sheet URL" field in the tracker and click Connect.</li>
+    </ol>
+    <div class="panel-section">Apps Script Code (copy all)</div>
+    <pre id="apps-script-code">const SHEET_NAME = "Jobs";
+
+function doGet(e) {
+  const action = e.parameter.action;
+  if (action === "getAll") return getAll();
+  if (action === "getStatuses") return getStatuses();
+  return ContentService.createTextOutput(JSON.stringify({error:"unknown action"}))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  const data = JSON.parse(e.postData.contents);
+  if (data.action === "updateStatus") return updateStatus(data);
+  if (data.action === "upsertJob") return upsertJob(data);
+  return ContentService.createTextOutput(JSON.stringify({error:"unknown action"}))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function getAll() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sh = ss.getSheetByName(SHEET_NAME);
+  const rows = sh.getDataRange().getValues();
+  if (rows.length < 2) return json([]);
+  const headers = rows[0];
+  const data = rows.slice(1).map(r => {
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = r[i]);
+    return obj;
+  });
+  return json(data);
+}
+
+function getStatuses() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sh = ss.getSheetByName(SHEET_NAME);
+  const rows = sh.getDataRange().getValues();
+  if (rows.length < 2) return json({});
+  const headers = rows[0];
+  const idCol = headers.indexOf("id");
+  const statusCol = headers.indexOf("status");
+  const notesCol = headers.indexOf("notes");
+  const closureCol = headers.indexOf("closureDate");
+  const result = {};
+  rows.slice(1).forEach(r => {
+    result[String(r[idCol])] = {
+      status: r[statusCol],
+      notes: notesCol >= 0 ? r[notesCol] : "",
+      closureDate: closureCol >= 0 ? r[closureCol] : ""
+    };
+  });
+  return json(result);
+}
+
+function updateStatus(data) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sh = ss.getSheetByName(SHEET_NAME);
+  const rows = sh.getDataRange().getValues();
+  const headers = rows[0];
+  const idCol = headers.indexOf("id");
+  const statusCol = headers.indexOf("status");
+  const notesCol = headers.indexOf("notes");
+  const closureCol = headers.indexOf("closureDate");
+  const appliedAtCol = headers.indexOf("appliedAt");
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][idCol]) === String(data.id)) {
+      if (statusCol >= 0) sh.getRange(i+1, statusCol+1).setValue(data.status);
+      if (notesCol >= 0 && data.notes !== undefined) sh.getRange(i+1, notesCol+1).setValue(data.notes);
+      if (closureCol >= 0 && data.closureDate !== undefined) sh.getRange(i+1, closureCol+1).setValue(data.closureDate);
+      if (appliedAtCol >= 0 && data.status === "applied") sh.getRange(i+1, appliedAtCol+1).setValue(new Date().toISOString());
+      return json({ok:true});
+    }
+  }
+  // Row not found — append it
+  return upsertJob({...data, action:"upsertJob"});
+}
+
+function upsertJob(data) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sh = ss.getSheetByName(SHEET_NAME);
+  const headers = sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0];
+  const row = headers.map(h => data[h] !== undefined ? data[h] : "");
+  sh.appendRow(row);
+  return json({ok:true, appended:true});
+}
+
+function json(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}</pre>
+    <button class="btn-lg btn-lg-blue" style="margin-top:12px;" onclick="copyScript()">Copy Script</button>
+    <span id="script-copied" style="font-size:12px;color:var(--color-text-success);margin-left:8px;display:none;">Copied!</span>
+  </div>
+</div>
+
+<div class="container">
+
+<div class="topbar">
+  <div class="topbar-title">Swathy — remote job tracker</div>
+  <div class="stats">
+    <div class="stat">Total<span id="total-count">0</span></div>
+    <div class="stat">New<span id="new-count">0</span></div>
+    <div class="stat">Applied<span id="applied-count">0</span></div>
+  </div>
+  <div class="next-scan" id="next-scan-label">Next scan: calculating...</div>
+</div>
+
+<!-- Google Sheet Config Banner -->
+<div class="sheet-config" id="sheet-config-bar">
+  <span style="font-weight:600;white-space:nowrap;">📊 Google Sheet:</span>
+  <input type="text" id="sheet-url-input" placeholder="Paste your Apps Script Web App URL here…" />
+  <button class="btn-sm btn-apply" onclick="connectSheet()">Connect</button>
+  <button class="btn-sm btn-view" onclick="document.getElementById('setup-modal').style.display='flex'">Setup Guide</button>
+  <span class="sheet-status disconnected" id="sheet-status-badge">Not connected</span>
+</div>
+
+<div class="scan-row">
+  <div class="scan-card"><div class="scan-time">9:00 AM</div><div class="scan-label">Morning scan</div><div class="scan-next" id="s1"></div></div>
+  <div class="scan-card"><div class="scan-time">12:00 PM</div><div class="scan-label">Noon scan</div><div class="scan-next" id="s2"></div></div>
+  <div class="scan-card"><div class="scan-time">6:00 PM</div><div class="scan-label">Evening scan</div><div class="scan-next" id="s3"></div></div>
+  <div class="scan-card" style="background:var(--color-background-info);">
+    <div class="scan-time" style="color:var(--color-text-info);font-size:13px;">Scan now</div>
+    <button class="btn-sm" style="margin-top:6px;width:100%;" onclick="runScan()">Run scan</button>
+  </div>
+</div>
+
+<div class="filter-row">
+  <button class="filter-btn active" onclick="setFilter('all',this)">All roles</button>
+  <button class="filter-btn" onclick="setFilter('Technical Writer',this)">Technical Writer</button>
+  <button class="filter-btn" onclick="setFilter('Customer Success',this)">Customer Success</button>
+  <button class="filter-btn" onclick="setFilter('Implementation',this)">Implementation</button>
+  <button class="filter-btn" onclick="setFilter('Content',this)">Content</button>
+  <button class="filter-btn" onclick="setFilter('new',this)">New only</button>
+  <div class="search-box"><input type="text" placeholder="Search jobs..." id="search-input" oninput="renderTable()"></div>
+</div>
+
+<div style="overflow-x:auto;">
+<table id="job-table">
+  <thead>
+    <tr>
+      <th class="col-title">Role</th>
+      <th class="col-co">Company</th>
+      <th class="col-type">Type</th>
+      <th class="col-src">Source</th>
+      <th class="col-match">Match</th>
+      <th class="col-status">Status</th>
+      <th class="col-act">Actions</th>
+    </tr>
+  </thead>
+  <tbody id="job-tbody"></tbody>
+</table>
+</div>
+
+<div id="detail-panel" style="display:none;"></div>
+
+</div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const STORAGE_KEY_URL   = 'swathy_sheet_url';
+const STORAGE_KEY_STATUSES = 'swathy_statuses';
+
+// ─── JOBS DATA ────────────────────────────────────────────────────────────────
+const JOBS = [
+  {id:1,title:"Technical Writer (Remote)",company:"Stripe",type:"Technical Writer",source:"LinkedIn",match:95,location:"USA/Global",salary:"$70k–$95k",posted:"Today",closureDate:"2025-08-15",status:"new",applyUrl:"https://www.linkedin.com/jobs/search/?keywords=technical+writer+remote",desc:"Create and maintain API documentation, developer guides, and release notes for Stripe's payment platform. Work with engineering teams to produce clear, structured content for global developer audiences.",skills:["API Documentation","Markdown","Developer Guides","Release Notes"]},
+  {id:2,title:"Senior Technical Writer",company:"Atlassian",type:"Technical Writer",source:"Remote.co",match:92,location:"Australia/Global",salary:"$80k–$110k",posted:"Today",closureDate:"2025-08-20",status:"new",applyUrl:"https://remote.co/remote-jobs/writing/",desc:"Own documentation for Confluence and Jira products. Collaborate with product managers and engineers. Maintain style guides and documentation portals.",skills:["Confluence","Style Guides","SDLC","User Guides"]},
+  {id:3,title:"Customer Success Manager",company:"HubSpot",type:"Customer Success",source:"Indeed",match:88,location:"EMEA Remote",salary:"$55k–$75k",posted:"Yesterday",closureDate:"2025-07-31",status:"new",applyUrl:"https://www.indeed.com/q-remote-customer-success-manager-jobs.html",desc:"Manage a portfolio of SaaS clients across EMEA, drive product adoption, conduct onboarding training, and ensure customer satisfaction.",skills:["Client Management","SaaS","Training","Stakeholder Communication"]},
+  {id:4,title:"Implementation Consultant (Remote)",company:"Salesforce",type:"Implementation",source:"We Work Remotely",match:86,location:"Global",salary:"$65k–$85k",posted:"2 days ago",closureDate:"2025-08-10",status:"new",applyUrl:"https://weworkremotely.com/",desc:"Lead software implementation projects for enterprise clients. Conduct system study, gap analysis, configuration, client training, and go-live support.",skills:["Implementation","Client Training","SDLC","Project Coordination"]},
+  {id:5,title:"Technical Content Writer",company:"Notion",type:"Content",source:"Remotive",match:90,location:"Global Remote",salary:"$60k–$80k",posted:"Today",closureDate:"2025-08-05",status:"new",applyUrl:"https://remotive.com/remote-jobs/writing",desc:"Write product documentation, help articles, and knowledge base content for Notion's 30M+ users. Experience with CMS tools and Markdown required.",skills:["Notion","CMS","Knowledge Base","Markdown"]},
+  {id:6,title:"API Technical Writer",company:"Twilio",type:"Technical Writer",source:"LinkedIn",match:93,location:"USA/Global Remote",salary:"$75k–$100k",posted:"Today",closureDate:"2025-09-01",status:"new",applyUrl:"https://www.linkedin.com/jobs/search/?keywords=api+technical+writer+remote",desc:"Write API reference docs, code samples, and integration guides. Work closely with developer experience teams using Postman and OpenAPI specs.",skills:["API Docs","Postman","OpenAPI","Developer UX"]},
+  {id:7,title:"Documentation Specialist",company:"GitLab",type:"Technical Writer",source:"We Work Remotely",match:89,location:"Global Remote",salary:"$60k–$80k",posted:"Yesterday",closureDate:"2025-08-25",status:"new",applyUrl:"https://weworkremotely.com/",desc:"Maintain and improve GitLab's open-source documentation. Write tutorials, process docs, and contribute to docs-as-code workflows using Git, Markdown, and CI/CD pipelines.",skills:["Docs-as-code","Git","Markdown","Open Source"]},
+  {id:8,title:"Customer Success Specialist",company:"Zendesk",type:"Customer Success",source:"Indeed",match:84,location:"EMEA Remote",salary:"$45k–$60k",posted:"2 days ago",closureDate:"2025-07-28",status:"new",applyUrl:"https://www.indeed.com/q-remote-customer-success-jobs.html",desc:"Support B2B clients using Zendesk products, create help documentation, run onboarding sessions, and track customer health metrics.",skills:["Customer Support","Onboarding","SaaS","Documentation"]},
+  {id:9,title:"Technical Project Coordinator",company:"Automattic",type:"Implementation",source:"Remotive",match:82,location:"Global Remote",salary:"$50k–$70k",posted:"3 days ago",closureDate:"2025-08-18",status:"new",applyUrl:"https://remotive.com/",desc:"Coordinate cross-functional software projects from planning to delivery. Manage stakeholder communication, timelines, and release documentation.",skills:["Project Coordination","Agile","Release Notes","Stakeholder Mgmt"]},
+  {id:10,title:"Content Strategist – Tech",company:"Shopify",type:"Content",source:"LinkedIn",match:85,location:"Global Remote",salary:"$65k–$85k",posted:"Today",closureDate:"2025-09-10",status:"new",applyUrl:"https://www.linkedin.com/jobs/search/?keywords=content+strategist+remote+tech",desc:"Develop content strategy for Shopify's merchant-facing documentation, blog, and help centre. E-commerce background and technical writing skills essential.",skills:["Content Strategy","E-Commerce","CMS","SEO"]},
+  {id:11,title:"Technical Writer – SaaS",company:"Monday.com",type:"Technical Writer",source:"Remote.co",match:88,location:"Global Remote",salary:"$55k–$75k",posted:"Today",closureDate:"2025-08-12",status:"new",applyUrl:"https://remote.co/remote-jobs/writing/",desc:"Write user guides, onboarding docs, and release notes for Monday.com's work OS platform. Collaborate with product and design teams.",skills:["User Guides","Release Notes","SaaS Docs","Collaboration"]},
+  {id:12,title:"Implementation & Onboarding Specialist",company:"Intercom",type:"Implementation",source:"We Work Remotely",match:87,location:"EMEA Remote",salary:"$50k–$68k",posted:"Yesterday",closureDate:"2025-08-08",status:"new",applyUrl:"https://weworkremotely.com/",desc:"Guide new enterprise clients through software onboarding, configure product settings, write client-specific system documentation, and conduct training sessions.",skills:["Onboarding","Client Training","Implementation","System Docs"]},
+];
+
+let currentFilter = 'all';
+let activeJobId = null;
+let jobs = JOBS.map(j => ({...j}));
+let sheetUrl = localStorage.getItem(STORAGE_KEY_URL) || '';
+let sheetConnected = false;
+
+// ─── SHEET CONNECTION ──────────────────────────────────────────────────────────
+function connectSheet() {
+  const url = document.getElementById('sheet-url-input').value.trim();
+  if (!url) { showToast('Paste the Apps Script Web App URL first.'); return; }
+  sheetUrl = url;
+  localStorage.setItem(STORAGE_KEY_URL, url);
+  setSheetStatus('syncing', 'Connecting…');
+  syncFromSheet();
+}
+
+function setSheetStatus(state, label) {
+  const el = document.getElementById('sheet-status-badge');
+  el.className = 'sheet-status ' + state;
+  el.textContent = label;
+}
+
+async function syncFromSheet() {
+  if (!sheetUrl) return;
+  setSheetStatus('syncing', 'Syncing…');
+  try {
+    const res = await fetch(sheetUrl + '?action=getStatuses');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    // Merge sheet statuses into jobs
+    let changes = 0;
+    jobs.forEach(j => {
+      const row = data[String(j.id)];
+      if (row) {
+        j.status = row.status || j.status;
+        if (row.notes !== undefined) j.notes = row.notes;
+        if (row.closureDate) j.closureDate = row.closureDate;
+        changes++;
+      }
+    });
+    // Cache locally too
+    localStorage.setItem(STORAGE_KEY_STATUSES, JSON.stringify(data));
+    sheetConnected = true;
+    setSheetStatus('connected', '✓ Connected');
+    renderTable();
+    showToast('Synced from Google Sheet (' + changes + ' rows)');
+  } catch(e) {
+    setSheetStatus('disconnected', 'Error — check URL');
+    showToast('Sheet sync failed: ' + e.message);
+    // Fall back to local cache
+    loadLocalCache();
+  }
+}
+
+function loadLocalCache() {
+  const cached = localStorage.getItem(STORAGE_KEY_STATUSES);
+  if (!cached) return;
+  const data = JSON.parse(cached);
+  jobs.forEach(j => {
+    const row = data[String(j.id)];
+    if (row) {
+      j.status = row.status || j.status;
+      if (row.notes !== undefined) j.notes = row.notes;
+      if (row.closureDate) j.closureDate = row.closureDate;
+    }
+  });
+  renderTable();
+}
+
+async function pushStatusToSheet(job) {
+  if (!sheetUrl) {
+    // Save locally only
+    saveLocalStatus(job);
+    return;
+  }
+  // Save locally too as fallback
+  saveLocalStatus(job);
+  try {
+    await fetch(sheetUrl, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'updateStatus',
+        id: job.id,
+        title: job.title,
+        company: job.company,
+        type: job.type,
+        source: job.source,
+        match: job.match,
+        location: job.location,
+        salary: job.salary,
+        posted: job.posted,
+        closureDate: job.closureDate || '',
+        status: job.status,
+        applyUrl: job.applyUrl,
+        desc: job.desc,
+        skills: (job.skills||[]).join(', '),
+        notes: job.notes || '',
+        appliedAt: job.status === 'applied' ? new Date().toISOString() : ''
+      })
+    });
+  } catch(e) {
+    showToast('Sheet update failed — saved locally only.');
+  }
+}
+
+function saveLocalStatus(job) {
+  let cache = {};
+  try { cache = JSON.parse(localStorage.getItem(STORAGE_KEY_STATUSES) || '{}'); } catch(e){}
+  cache[String(job.id)] = { status: job.status, notes: job.notes || '', closureDate: job.closureDate || '' };
+  localStorage.setItem(STORAGE_KEY_STATUSES, JSON.stringify(cache));
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function getBadgeClass(type) {
+  if(type==='Technical Writer') return 'badge-tw';
+  if(type==='Customer Success') return 'badge-cs';
+  if(type==='Implementation') return 'badge-impl';
+  if(type==='Content') return 'badge-cont';
+  return 'badge-tw';
+}
+function getSrcClass(src) {
+  const m={'LinkedIn':'source-li','Indeed':'source-ind','Remote.co':'source-rem','We Work Remotely':'source-wwr','Remotive':'source-rmtv'};
+  return m[src]||'source-li';
+}
+function getMatchColor(m) {
+  if(m>=90) return '#639922';
+  if(m>=80) return '#BA7517';
+  return '#378ADD';
+}
+
+function closureInfo(dateStr) {
+  if (!dateStr) return { label: 'Not specified', cls: '' };
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diff = Math.round((d - now) / (1000*60*60*24));
+  if (diff < 0) return { label: 'Closed ' + Math.abs(diff) + 'd ago', cls: 'closure-expired' };
+  if (diff === 0) return { label: 'Closes today!', cls: 'closure-soon' };
+  if (diff <= 3) return { label: 'Closes in ' + diff + 'd', cls: 'closure-soon' };
+  return { label: 'Closes ' + d.toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'}), cls: 'closure-ok' };
+}
+
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  activeJobId = null;
+  document.getElementById('detail-panel').style.display = 'none';
+  renderTable();
+}
+
+function renderTable() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const filtered = jobs.filter(j => {
+    const matchFilter = currentFilter==='all' || j.type===currentFilter || (currentFilter==='new' && j.status==='new');
+    const matchSearch = !search || j.title.toLowerCase().includes(search) || j.company.toLowerCase().includes(search);
+    return matchFilter && matchSearch;
+  });
+  const tbody = document.getElementById('job-tbody');
+  tbody.innerHTML = filtered.length===0 ? `<tr><td colspan="7" class="empty-panel">No jobs found.</td></tr>` :
+    filtered.map(j => {
+      const ci = closureInfo(j.closureDate);
+      const closurePill = j.closureDate ? `<span class="badge ${ci.cls}" style="font-size:10px;margin-top:3px;">${ci.label}</span>` : '';
+      return `
+      <tr>
+        <td style="font-weight:500;">${j.title}<br><span style="font-size:11px;color:var(--color-text-secondary);">${j.location}</span></td>
+        <td>${j.company}<br><span style="font-size:11px;color:var(--color-text-secondary);">${j.posted}</span>${closurePill}</td>
+        <td><span class="badge ${getBadgeClass(j.type)}">${j.type}</span></td>
+        <td><span class="badge ${getSrcClass(j.source)}">${j.source}</span></td>
+        <td><span style="font-weight:500;color:${getMatchColor(j.match)};">${j.match}%</span>
+          <div class="match-bar"><div class="match-fill" style="width:${j.match}%;background:${getMatchColor(j.match)};"></div></div></td>
+        <td><span class="badge ${j.status==='new'?'status-new':j.status==='applied'?'status-applied':'status-skip'}">${j.status}</span></td>
+        <td style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn-sm btn-details" onclick="viewDetails(${j.id})">📋 Details</button>
+          <button class="btn-sm btn-view" onclick="viewJob(${j.id})">Cover letter</button>
+          ${j.status!=='applied'?`<button class="btn-sm btn-apply" onclick="applyJob(${j.id})">Apply now</button>`:'<span style="font-size:11px;color:var(--color-text-success);padding:4px 0;">✓ Applied</span>'}
+        </td>
+      </tr>`}).join('');
+  document.getElementById('total-count').textContent = jobs.length;
+  document.getElementById('new-count').textContent = jobs.filter(j=>j.status==='new').length;
+  document.getElementById('applied-count').textContent = jobs.filter(j=>j.status==='applied').length;
+}
+
+// ─── JOB DETAILS PANEL ───────────────────────────────────────────────────────
+function viewDetails(id) {
+  const j = jobs.find(x=>x.id===id);
+  activeJobId = id;
+  const panel = document.getElementById('detail-panel');
+  panel.style.display = 'block';
+  const ci = closureInfo(j.closureDate);
+  const closureHtml = j.closureDate
+    ? `<div class="closure-highlight ${ci.cls}">🗓 Closure date: <strong>${new Date(j.closureDate).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</strong> &nbsp;·&nbsp; ${ci.label}</div>`
+    : `<div class="closure-highlight" style="background:var(--color-background-secondary);border-color:var(--color-border-tertiary);color:var(--color-text-tertiary);">🗓 Closure date: <em>Not specified</em> &nbsp;
+       <button class="btn-sm" onclick="editClosure(${j.id})" style="font-size:11px;">Add date</button></div>`;
+
+  panel.innerHTML = `
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+        <div>
+          <div class="panel-title">📋 ${j.title}</div>
+          <div class="panel-sub">${j.company} &nbsp;·&nbsp; ${j.location} &nbsp;·&nbsp; ${j.salary}</div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn-sm btn-view" onclick="viewJob(${j.id})">Cover letter</button>
+          <button class="btn-sm" onclick="document.getElementById('detail-panel').style.display='none'">Close</button>
+        </div>
+      </div>
+
+      ${closureHtml}
+
+      <div class="detail-grid">
+        <div class="detail-item"><label>Posted</label><div class="detail-val">${j.posted}</div></div>
+        <div class="detail-item"><label>Source</label><div class="detail-val"><span class="badge ${getSrcClass(j.source)}">${j.source}</span></div></div>
+        <div class="detail-item"><label>Match score</label><div class="detail-val" style="color:${getMatchColor(j.match)};font-weight:600;">${j.match}%</div></div>
+        <div class="detail-item"><label>Status</label><div class="detail-val"><span class="badge ${j.status==='new'?'status-new':j.status==='applied'?'status-applied':'status-skip'}">${j.status}</span></div></div>
+        <div class="detail-item"><label>Type</label><div class="detail-val"><span class="badge ${getBadgeClass(j.type)}">${j.type}</span></div></div>
+        <div class="detail-item"><label>Salary</label><div class="detail-val">${j.salary}</div></div>
+      </div>
+
+      <div class="panel-section">Required Skills</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
+        ${j.skills.map(s=>`<span class="badge" style="background:var(--color-background-secondary);color:var(--color-text-secondary);">${s}</span>`).join('')}
+      </div>
+
+      <div class="panel-section">Job Description</div>
+      <div class="panel-body">${j.desc}</div>
+
+      <div class="panel-section">Your Notes</div>
+      <textarea id="job-notes-${j.id}" rows="3" placeholder="Add notes about this job…" onchange="saveNotes(${j.id})">${j.notes||''}</textarea>
+
+      <div class="panel-section">Edit Closure Date</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <input type="date" id="closure-date-${j.id}" value="${j.closureDate||''}" />
+        <button class="btn-sm btn-apply" onclick="saveClosure(${j.id})">Save date</button>
+        <span style="font-size:12px;color:var(--color-text-tertiary);">This is saved to Google Sheet automatically.</span>
+      </div>
+
+      <div class="panel-actions">
+        <button class="btn-lg btn-lg-green" onclick="applyJob(${j.id})">Apply now — open job page</button>
+        ${j.status!=='skip'?`<button class="btn-lg" onclick="skipJob(${j.id})">Skip this job</button>`:''}
+      </div>
+    </div>`;
+  panel.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function saveClosure(id) {
+  const j = jobs.find(x=>x.id===id);
+  const dateVal = document.getElementById('closure-date-' + id).value;
+  j.closureDate = dateVal;
+  pushStatusToSheet(j);
+  renderTable();
+  viewDetails(id);
+  showToast('Closure date saved' + (sheetUrl ? ' to Google Sheet' : ' locally'));
+}
+
+function saveNotes(id) {
+  const j = jobs.find(x=>x.id===id);
+  j.notes = document.getElementById('job-notes-' + id).value;
+  pushStatusToSheet(j);
+  showToast('Notes saved' + (sheetUrl ? ' to Google Sheet' : ' locally'));
+}
+
+// ─── COVER LETTER PANEL ───────────────────────────────────────────────────────
+function coverLetter(j) {
+  return `Dear Hiring Team at ${j.company},
+
+I am writing to express my strong interest in the ${j.title} position. With over 7 years of experience in technical writing, software implementation, and IT project coordination across India and the UAE, I am confident I can contribute meaningfully to your team from day one.
+
+In my current role at Olive FZE (Sharjah, UAE), I manage end-to-end technical documentation — including User Guides, Release Notes, Knowledge Base Articles, and Online Documentation Portals — while also leading product implementation in client environments and conducting end-user training. This dual experience of writing and implementation makes me uniquely suited for the ${j.title} role at ${j.company}.
+
+My technical toolkit includes Markdown, HTML, CSS, XML, Docusaurus, Notion, Azure DevOps, Postman (basic), and Microsoft Office Suite. I hold a B.Tech in Computer Science and have completed a Udemy certification in API Technical Writing: JSON and XML for Writers.
+
+What draws me to ${j.company} is the opportunity to work in a remote-first environment where documentation quality directly impacts user experience. I thrive in cross-functional settings, collaborating with developers, QA teams, and product managers to deliver clear, structured content under tight timelines.
+
+I am based in Sharjah, UAE, on a family visa, hold a valid UAE driving license, and am fully available for remote work across any time zone.
+
+Thank you sincerely for your time and consideration.
+
+Warm regards,
+Swathy K S
+swathysanath@gmail.com | +971 56 822 6804
+LinkedIn: Swathy K S`;
+}
+
+function viewJob(id) {
+  const j = jobs.find(x=>x.id===id);
+  activeJobId = id;
+  const cl = coverLetter(j);
+  const panel = document.getElementById('detail-panel');
+  panel.style.display = 'block';
+  panel.innerHTML = `
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+        <div><div class="panel-title">${j.title}</div>
+        <div class="panel-sub">${j.company} &nbsp;|&nbsp; ${j.location} &nbsp;|&nbsp; ${j.salary} &nbsp;|&nbsp; Posted: ${j.posted}</div></div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn-sm btn-details" onclick="viewDetails(${j.id})">📋 Job Details</button>
+          <button class="btn-sm" onclick="document.getElementById('detail-panel').style.display='none'">Close</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+        ${j.skills.map(s=>`<span class="badge" style="background:var(--color-background-secondary);color:var(--color-text-secondary);">${s}</span>`).join('')}
+      </div>
+      <div class="panel-section">Job description</div>
+      <div class="panel-body">${j.desc}</div>
+      <div class="panel-section">Cover letter — review and edit before sending</div>
+      <textarea id="cover-edit" rows="16">${cl}</textarea>
+      <div class="panel-actions">
+        <button class="btn-lg btn-lg-green" onclick="applyJob(${j.id})">Apply now — open job page</button>
+        <button class="btn-lg btn-lg-blue" onclick="copyCover()">Copy cover letter</button>
+        <span class="copied" id="copied-note">Copied!</span>
+        <button class="btn-lg" onclick="skipJob(${j.id})">Skip this job</button>
+      </div>
+    </div>`;
+  panel.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function copyCover() {
+  const txt = document.getElementById('cover-edit').value;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const el = document.getElementById('copied-note');
+    el.style.display='inline';
+    setTimeout(()=>el.style.display='none',2000);
+  });
+}
+
+function applyJob(id) {
+  const j = jobs.find(x=>x.id===id);
+  j.status='applied';
+  window.open(j.applyUrl,'_blank');
+  pushStatusToSheet(j);
+  renderTable();
+  showToast('Marked as applied — saved' + (sheetUrl ? ' to Google Sheet' : ' locally'));
+  if(activeJobId===id) viewDetails(id);
+}
+
+function skipJob(id) {
+  const j = jobs.find(x=>x.id===id);
+  j.status='skip';
+  pushStatusToSheet(j);
+  document.getElementById('detail-panel').style.display='none';
+  renderTable();
+  showToast('Job skipped — status saved');
+}
+
+// ─── SCAN ──────────────────────────────────────────────────────────────────────
+function runScan() {
+  const newJobs = [
+    {id:Date.now(),title:"Remote Technical Writer",company:"Figma",type:"Technical Writer",source:"LinkedIn",match:91,location:"Global Remote",salary:"$70k–$90k",posted:"Just now",closureDate:"",status:"new",applyUrl:"https://www.linkedin.com/jobs/search/?keywords=technical+writer+remote",desc:"Write product documentation, UI copy guidelines, and developer resources for Figma's design platform.",skills:["Product Docs","UI Writing","Developer Guides","Markdown"]},
+    {id:Date.now()+1,title:"Implementation Manager",company:"Asana",type:"Implementation",source:"Remotive",match:84,location:"EMEA Remote",salary:"$55k–$72k",posted:"Just now",closureDate:"",status:"new",applyUrl:"https://remotive.com/",desc:"Lead client onboarding, implementation, and training for Asana's work management SaaS.",skills:["Implementation","Client Onboarding","SaaS","Training"]},
+  ];
+  jobs = [...newJobs, ...jobs];
+  renderTable();
+  alert('Scan complete — 2 new jobs added to the top of your list.');
+}
+
+// ─── TIMERS ───────────────────────────────────────────────────────────────────
+function updateTimers() {
+  const now = new Date();
+  const uaeOffset = 4 * 60;
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const uae = new Date(utc + uaeOffset * 60000);
+  const h = uae.getHours(), m = uae.getMinutes();
+  const times = [{h:9,label:'s1'},{h:12,label:'s2'},{h:18,label:'s3'}];
+  let nextLabel = '';
+  times.forEach(t => {
+    const minLeft = (t.h*60)-(h*60+m);
+    const el = document.getElementById(t.label);
+    if(minLeft<=0 && minLeft>-60){ el.textContent='Scanning now'; el.style.color='var(--color-text-success)'; }
+    else if(minLeft>0){
+      const hr=Math.floor(minLeft/60), mn=minLeft%60;
+      el.textContent=`In ${hr>0?hr+'h ':''}${mn}m`;
+      if(!nextLabel) nextLabel=`Next scan: ${t.h===9?'9:00 AM':t.h===12?'12:00 PM':'6:00 PM'} UAE (in ${hr>0?hr+'h ':''}${mn}m)`;
+    } else { el.textContent='Done today'; el.style.color='var(--color-text-secondary)'; }
+  });
+  document.getElementById('next-scan-label').textContent = nextLabel || 'Next scan: 9:00 AM tomorrow';
+}
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function copyScript() {
+  const code = document.getElementById('apps-script-code').textContent;
+  navigator.clipboard.writeText(code).then(()=>{
+    document.getElementById('script-copied').style.display='inline';
+    setTimeout(()=>document.getElementById('script-copied').style.display='none', 2000);
+  });
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+(function init() {
+  // Restore saved sheet URL
+  if (sheetUrl) {
+    document.getElementById('sheet-url-input').value = sheetUrl;
+  }
+
+  // Always load local cache first (instant)
+  loadLocalCache();
+  renderTable();
+  updateTimers();
+  setInterval(updateTimers, 60000);
+
+  // Then sync from sheet if URL is set
+  if (sheetUrl) {
+    syncFromSheet();
+  }
+})();
+</script>
+</body>
+</html>
